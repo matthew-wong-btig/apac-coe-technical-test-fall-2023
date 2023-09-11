@@ -1,0 +1,6 @@
+doc
+dist
+node_modules
+test
+tests
+.env
