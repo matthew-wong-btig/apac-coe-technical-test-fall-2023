@@ -24,7 +24,6 @@ This Technical test will access the basics of software development.
   - Comments on task (optional)
 - Expected completion time: 3 days
 - Open source library can be use if the number of stars on Github > 5k
-- It is suggested to add [tags](https://git-scm.com/book/en/v2/Git-Basics-Tagging) on your git commit history upon finish of each task, if candidate does not prefer git tags, please include a section on README.md how should we run the programme for corresponding task
 - The suggested outcome of this technical test is a single Github repository. But if needed, candidate can submit multiple repositories.
 - In case of enquiry, please email [BTIGAPCOE@btig.corp](mailto://BTIGAPCOE@btig.corp).
 
@@ -63,20 +62,20 @@ Docker is required for this technical test. Please install it before taking the 
 
 **Please make sure you have the prerequisite completed before proceeding.**
 
-1. Extract the `application.zip`
+1. Extract the `apac-coe-technical-test-fall-2023-master.zip`
 2. Verify the folder content
 
 ```shell
-# assume this is the folder where application.zip reside on your computer
-- application.zip
-- application
+# assume this is the folder where apac-coe-technical-test-fall-2023-master.zip reside on your computer
+- .zip
+- apac-coe-technical-test-fall-2023-master
 |- seeder
 |- CODEWNERS
 |- docker-compose.yml
 |- techtest.md
 ```
 
-3. Change directory to application by running `cd application` using terminal
+3. Change directory to apac-coe-technical-test-fall-2023-master by running `cd apac-coe-technical-test-fall-2023-master` using terminal
 4. Verify docker daemon has been started
 5. Run `docker-compose up`
 
