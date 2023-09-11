@@ -1,6 +1,6 @@
-# BTIG APAC COE technical test - Full Stack
+# BTIG APAC COE Technical Test - Full Stack
 
-(version: 8 SEP 2023)
+(version: 11 SEP 2023)
 
 This Technical test will access the basics of software development.
 
@@ -29,9 +29,9 @@ This Technical test will access the basics of software development.
 
 ## Submission
 
-1. Create a private Github repository in your Github account.
+1. Create a private Github repository in your Github account. **Please do not commit to the public repository provided.**
 2. Add `oli@btig.com.hk`, `matthew.wong@btig.com.hk`, and `schan@btig.com.hk` as collaborator.
-3. Push code to the Github repository.
+3. Push code to your Github repository.
 4. Notify [BTIGAPCOE@btig.com](mailto://BTIGAPCOE@btig.com) upon submission of the code.
    ​
 
@@ -67,7 +67,7 @@ Docker is required for this technical test. Please install it before taking the 
 
 ```shell
 # assume this is the folder where apac-coe-technical-test-fall-2023-master.zip reside on your computer
-- .zip
+- apac-coe-technical-test-fall-2023-master.zip
 - apac-coe-technical-test-fall-2023-master
 |- seeder
 |- CODEWNERS
@@ -75,7 +75,7 @@ Docker is required for this technical test. Please install it before taking the 
 |- techtest.md
 ```
 
-3. Change directory to apac-coe-technical-test-fall-2023-master by running `cd apac-coe-technical-test-fall-2023-master` using terminal
+3. Change directory to the root folder by running `cd apac-coe-technical-test-fall-2023-master` using terminal
 4. Verify docker daemon has been started
 5. Run `docker-compose up`
 
@@ -313,6 +313,7 @@ Build a dashboard for analytic purposes on your web application that you have ju
 
 - adopt monorepo structure
 - add unit test for your function
+- add logs for api retrieval and application access
 - add other charts and figures in your dashboard with clear interpretation of data
 - sophisticated and flexible blotter design
 - ability to handle concurrent connections without dropping of speed
