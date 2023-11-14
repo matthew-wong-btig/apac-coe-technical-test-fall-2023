@@ -113,7 +113,7 @@ __decorate([
         primary: true,
     }),
     __metadata("design:type", String)
-], Orders.prototype, "Order_id", void 0);
+], Orders.prototype, "Order_Id", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: "int",
@@ -205,7 +205,7 @@ __decorate([
         nullable: true,
     }),
     __metadata("design:type", String)
-], Orders.prototype, "Representative_Id", void 0);
+], Orders.prototype, "Trader", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: "varchar",

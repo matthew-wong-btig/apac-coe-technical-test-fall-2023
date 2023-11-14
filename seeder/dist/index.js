@@ -14,6 +14,7 @@ const lodash_1 = require("lodash");
 const dayjs_1 = __importDefault(require("dayjs"));
 const randomizer_1 = require("./libs/helper/randomizer");
 const splitNumber_1 = require("./libs/helper/splitNumber");
+const Trader_1 = require("./entities/Trader");
 (async function () {
     await ormconfig_1.AppDataSoruce.initialize();
     const or = ormconfig_1.AppDataSoruce.getRepository(order_1.Orders);
@@ -32,7 +33,8 @@ function seed1() {
     let childOrders = [];
     const security = faker_1.faker.helpers.arrayElement(SecurityMaster_1.SecurityMaster);
     const client = faker_1.faker.helpers.arrayElement(Client_1.clients);
-    let rootOrder = generateRootOrder(security, client);
+    const trader = faker_1.faker.helpers.arrayElement(Trader_1.traders);
+    let rootOrder = generateRootOrder(security, client, trader);
     orders.push(rootOrder);
     const action = (0, randomizer_1.finiteStateRandomizer)(["a", "b", "c", "d"]);
     if (action === "a") {
@@ -83,7 +85,7 @@ function seed1() {
     console.log(orders, trades);
     return { orders, trades };
 }
-function generateRootOrder(security, client) {
+function generateRootOrder(security, client, trader) {
     const orderToInsert = new order_1.Orders();
     const enterDate = faker_1.faker.date.between({
         from: (0, dayjs_1.default)().add(-1, "year").toDate(),
@@ -101,7 +103,7 @@ function generateRootOrder(security, client) {
     orderToInsert.Counterparty_Code = client.code;
     orderToInsert.Counterparty_Description = client.description;
     orderToInsert.Top_Level = "Y";
-    orderToInsert.Order_id = orderId;
+    orderToInsert.Order_Id = orderId;
     orderToInsert.Buy_Sell = faker_1.faker.helpers.arrayElement(["B", "S"]);
     orderToInsert.Total_Quantity = faker_1.faker.finance.amount({
         autoFormat: false,
@@ -124,7 +126,7 @@ function generateRootOrder(security, client) {
     orderToInsert.Settlement_Ccy = faker_1.faker.finance.currencyCode();
     orderToInsert.Dealt_To_Settlement_Rate = "1";
     orderToInsert.Amended_Datetime = enterDate;
-    orderToInsert.Representative_Id = faker_1.faker.lorem.word(3);
+    orderToInsert.Trader = trader;
     orderToInsert.Num_Fills = "0";
     orderToInsert.Entered_Datetime = enterDate;
     orderToInsert.Settlement_Datetime = (0, dayjs_1.default)(enterDate).add(2, "day").toDate();
@@ -160,7 +162,7 @@ function generateChildOrder(rootOrder) {
         for (let i = 0; i < numSplit; i++) {
             const child = (0, lodash_1.cloneDeep)(clonedOrder);
             child.Top_Level = "N";
-            child.Order_id = node_crypto_1.default.randomUUID();
+            child.Order_Id = node_crypto_1.default.randomUUID();
             child.Total_Quantity = qtyArr[i].toString();
             child.Quantity_Available = qtyArr[i].toString();
             childOrderArray.push((0, lodash_1.cloneDeep)(child));
@@ -173,13 +175,19 @@ function cancelOrder(rootOrder) {
     const amended = (0, lodash_1.cloneDeep)(original);
     amended.Order_State = "C";
     amended.Version += 1;
-    amended.Amended_Datetime = faker_1.faker.date.between({ from: original.Entered_Datetime, to: (0, dayjs_1.default)(original.Entered_Datetime).add(8, 'h').toDate() });
+    amended.Amended_Datetime = faker_1.faker.date.between({
+        from: original.Entered_Datetime,
+        to: (0, dayjs_1.default)(original.Entered_Datetime).add(8, "h").toDate(),
+    });
     return amended;
 }
 function amendOrder(order) {
     const amended = (0, lodash_1.cloneDeep)(order);
     amended.Version += 1;
-    amended.Amended_Datetime = faker_1.faker.date.between({ from: order.Entered_Datetime, to: (0, dayjs_1.default)(order.Entered_Datetime).add(8, 'h').toDate() });
+    amended.Amended_Datetime = faker_1.faker.date.between({
+        from: order.Entered_Datetime,
+        to: (0, dayjs_1.default)(order.Entered_Datetime).add(8, "h").toDate(),
+    });
     amended.Order_Notes = faker_1.faker.lorem.words({ min: 1, max: 3 });
     return amended;
 }
@@ -196,17 +204,21 @@ function fillOrder(order, rootOrder) {
         return {
             orders,
             trades,
-            rootOrder: orgRootOrder
+            rootOrder: orgRootOrder,
         };
     }
     if ((0, lodash_1.isNil)(rootOrder)) {
         switch (action) {
             case "1trade": {
-                const trade = generateTrade(order, { quantity: Number(order.Quantity_Available) });
+                const trade = generateTrade(order, {
+                    quantity: Number(order.Quantity_Available),
+                });
                 trades.push((0, lodash_1.cloneDeep)(trade));
                 orgOrder.Quantity_Available = (Number(orgOrder.Quantity_Available) - Number(trade.Quantity)).toString();
-                orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
-                orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
+                orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
+                orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
                 orgOrder.Amended_Datetime = trade.Trade_Datetime;
                 orgOrder.Version += 1;
                 orders.push((0, lodash_1.cloneDeep)(orgOrder));
@@ -215,11 +227,16 @@ function fillOrder(order, rootOrder) {
             case "2trade": {
                 const quantityArr = (0, splitNumber_1.splitNumber)(Number(orgOrder.Quantity_Available), { numSegment: 2 });
                 for (let qty of quantityArr) {
-                    const trade = generateTrade(order, { quantity: Number(order.Quantity_Available) });
+                    const trade = generateTrade(order, {
+                        quantity: Number(order.Quantity_Available),
+                    });
                     trades.push((0, lodash_1.cloneDeep)(trade));
-                    orgOrder.Quantity_Available = (Number(orgOrder.Quantity_Available) - Number(trade.Quantity)).toString();
-                    orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
-                    orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
+                    orgOrder.Quantity_Available = (Number(orgOrder.Quantity_Available) -
+                        Number(trade.Quantity)).toString();
+                    orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) +
+                        Number(trade.Quantity)).toString();
+                    orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) +
+                        Number(trade.Quantity)).toString();
                     orgOrder.Amended_Datetime = trade.Trade_Datetime;
                     orgOrder.Version += 1;
                     orders.push((0, lodash_1.cloneDeep)(orgOrder));
@@ -228,18 +245,29 @@ function fillOrder(order, rootOrder) {
             }
             case "1cancel1trade": {
                 const quantityArr = (0, splitNumber_1.splitNumber)(Number(orgOrder.Quantity_Available), { numSegment: 2 });
-                const tradeac = generateTrade(order, { quantity: Number(order.Quantity_Available) });
+                const tradeac = generateTrade(order, {
+                    quantity: Number(order.Quantity_Available),
+                });
                 trades.push(tradeac);
                 let tradec = (0, lodash_1.cloneDeep)(tradeac);
                 tradec.State = "C";
                 tradec.Version_Number += 1;
-                tradec.Amended_Datetime = faker_1.faker.date.between({ from: tradeac.Entered_Datetime, to: (0, dayjs_1.default)(tradeac.Entered_Datetime).add(10, 'minute').toDate() });
+                tradec.Amended_Datetime = faker_1.faker.date.between({
+                    from: tradeac.Entered_Datetime,
+                    to: (0, dayjs_1.default)(tradeac.Entered_Datetime)
+                        .add(10, "minute")
+                        .toDate(),
+                });
                 trades.push((0, lodash_1.cloneDeep)(tradec));
-                const trade = generateTrade(order, { quantity: Number(order.Quantity_Available) });
+                const trade = generateTrade(order, {
+                    quantity: Number(order.Quantity_Available),
+                });
                 trades.push((0, lodash_1.cloneDeep)(trade));
                 orgOrder.Quantity_Available = (Number(orgOrder.Quantity_Available) - Number(trade.Quantity)).toString();
-                orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
-                orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
+                orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
+                orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
                 orgOrder.Amended_Datetime = trade.Trade_Datetime;
                 orgOrder.Version += 1;
                 orders.push((0, lodash_1.cloneDeep)(orgOrder));
@@ -250,17 +278,24 @@ function fillOrder(order, rootOrder) {
     else {
         switch (action) {
             case "1trade": {
-                const trade = generateTrade(order, { quantity: Number(order.Quantity_Available) });
+                const trade = generateTrade(order, {
+                    quantity: Number(order.Quantity_Available),
+                });
                 trades.push((0, lodash_1.cloneDeep)(trade));
                 orgOrder.Quantity_Available = (Number(orgOrder.Quantity_Available) - Number(trade.Quantity)).toString();
-                orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
-                orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
+                orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
+                orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
                 orgOrder.Amended_Datetime = trade.Trade_Datetime;
                 orgOrder.Version += 1;
                 orders.push((0, lodash_1.cloneDeep)(orgOrder));
-                orgRootOrder.Quantity_Available = (Number(orgRootOrder.Quantity_Available) - Number(trade.Quantity)).toString();
-                orgRootOrder.Quantity_Filled_Today = (Number(orgRootOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
-                orgRootOrder.Num_Fills = (Number(orgRootOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
+                orgRootOrder.Quantity_Available = (Number(orgRootOrder.Quantity_Available) -
+                    Number(trade.Quantity)).toString();
+                orgRootOrder.Quantity_Filled_Today = (Number(orgRootOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
+                orgRootOrder.Num_Fills = (Number(orgRootOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
                 orgRootOrder.Amended_Datetime = trade.Trade_Datetime;
                 orgRootOrder.Version += 1;
                 orders.push((0, lodash_1.cloneDeep)(orgRootOrder));
@@ -271,15 +306,21 @@ function fillOrder(order, rootOrder) {
                 for (let qty of quantityArr) {
                     const trade = generateTrade(order, { quantity: qty });
                     trades.push((0, lodash_1.cloneDeep)(trade));
-                    orgOrder.Quantity_Available = (Number(orgOrder.Quantity_Available) - Number(trade.Quantity)).toString();
-                    orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
-                    orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
+                    orgOrder.Quantity_Available = (Number(orgOrder.Quantity_Available) -
+                        Number(trade.Quantity)).toString();
+                    orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) +
+                        Number(trade.Quantity)).toString();
+                    orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) +
+                        Number(trade.Quantity)).toString();
                     orgOrder.Amended_Datetime = trade.Trade_Datetime;
                     orgOrder.Version += 1;
                     orders.push((0, lodash_1.cloneDeep)(orgOrder));
-                    orgRootOrder.Quantity_Available = (Number(orgRootOrder.Quantity_Available) - Number(trade.Quantity)).toString();
-                    orgRootOrder.Quantity_Filled_Today = (Number(orgRootOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
-                    orgRootOrder.Num_Fills = (Number(orgRootOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
+                    orgRootOrder.Quantity_Available = (Number(orgRootOrder.Quantity_Available) -
+                        Number(trade.Quantity)).toString();
+                    orgRootOrder.Quantity_Filled_Today = (Number(orgRootOrder.Quantity_Filled_Today) +
+                        Number(trade.Quantity)).toString();
+                    orgRootOrder.Num_Fills = (Number(orgRootOrder.Quantity_Filled_Today) +
+                        Number(trade.Quantity)).toString();
                     orgRootOrder.Amended_Datetime = trade.Trade_Datetime;
                     orgRootOrder.Version += 1;
                     orders.push((0, lodash_1.cloneDeep)(orgRootOrder));
@@ -288,24 +329,38 @@ function fillOrder(order, rootOrder) {
             }
             case "1cancel1trade": {
                 const quantityArr = (0, splitNumber_1.splitNumber)(Number(orgOrder.Quantity_Available), { numSegment: 2 });
-                const tradeac = generateTrade(order, { quantity: Number(order.Quantity_Available) });
+                const tradeac = generateTrade(order, {
+                    quantity: Number(order.Quantity_Available),
+                });
                 trades.push((0, lodash_1.cloneDeep)(tradeac));
                 let tradec = (0, lodash_1.cloneDeep)(tradeac);
                 tradec.State = "C";
                 tradec.Version_Number += 1;
-                tradec.Amended_Datetime = faker_1.faker.date.between({ from: tradeac.Entered_Datetime, to: (0, dayjs_1.default)(tradeac.Entered_Datetime).add(10, 'minute').toDate() });
+                tradec.Amended_Datetime = faker_1.faker.date.between({
+                    from: tradeac.Entered_Datetime,
+                    to: (0, dayjs_1.default)(tradeac.Entered_Datetime)
+                        .add(10, "minute")
+                        .toDate(),
+                });
                 trades.push((0, lodash_1.cloneDeep)(tradec));
-                const trade = generateTrade(order, { quantity: Number(order.Quantity_Available) });
+                const trade = generateTrade(order, {
+                    quantity: Number(order.Quantity_Available),
+                });
                 trades.push(trade);
                 orgOrder.Quantity_Available = (Number(orgOrder.Quantity_Available) - Number(trade.Quantity)).toString();
-                orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
-                orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
+                orgOrder.Quantity_Filled_Today = (Number(orgOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
+                orgOrder.Num_Fills = (Number(orgOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
                 orgOrder.Amended_Datetime = trade.Trade_Datetime;
                 orgOrder.Version += 1;
                 orders.push((0, lodash_1.cloneDeep)(orgOrder));
-                orgRootOrder.Quantity_Available = (Number(orgRootOrder.Quantity_Available) - Number(trade.Quantity)).toString();
-                orgRootOrder.Quantity_Filled_Today = (Number(orgRootOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
-                orgRootOrder.Num_Fills = (Number(orgRootOrder.Quantity_Filled_Today) + Number(trade.Quantity)).toString();
+                orgRootOrder.Quantity_Available = (Number(orgRootOrder.Quantity_Available) -
+                    Number(trade.Quantity)).toString();
+                orgRootOrder.Quantity_Filled_Today = (Number(orgRootOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
+                orgRootOrder.Num_Fills = (Number(orgRootOrder.Quantity_Filled_Today) +
+                    Number(trade.Quantity)).toString();
                 orgRootOrder.Amended_Datetime = trade.Trade_Datetime;
                 orgRootOrder.Version += 1;
                 orders.push((0, lodash_1.cloneDeep)(orgRootOrder));
@@ -320,7 +375,7 @@ function fillOrder(order, rootOrder) {
     return {
         orders,
         trades,
-        rootOrder: orgRootOrder
+        rootOrder: orgRootOrder,
     };
 }
 function generateTrade(order, params) {
@@ -339,16 +394,22 @@ function generateTrade(order, params) {
     trade.Gross_Price = order.Limit_Price;
     trade.Quantity = quantity.toString();
     trade.Gross_Consideration = (Number(order.Limit_Price) * quantity).toString();
+    trade.Counterparty_Code = order.Counterparty_Code;
     trade.Counterparty = order.Counterparty_Description;
-    trade.Trade_Datetime = faker_1.faker.date.between(faker_1.faker.date.between({ from: order.Entered_Datetime, to: (0, dayjs_1.default)(order.Entered_Datetime).add(8, 'h').toDate() }));
+    trade.Trade_Datetime = faker_1.faker.date.between(faker_1.faker.date.between({
+        from: order.Entered_Datetime,
+        to: (0, dayjs_1.default)(order.Entered_Datetime).add(8, "h").toDate(),
+    }));
     trade.Trade_Id = node_crypto_1.default.randomUUID();
     trade.Version_Number = 1;
-    trade.Settlement_Datetime = (0, dayjs_1.default)(trade.Trade_Datetime).add(2, 'day').toDate();
+    trade.Settlement_Datetime = (0, dayjs_1.default)(trade.Trade_Datetime)
+        .add(2, "day")
+        .toDate();
     trade.Dealt_Ccy = "USD";
-    trade.Order_Id = order.Order_id;
+    trade.Order_Id = order.Order_Id;
     trade.Entered_By = faker_1.faker.lorem.word();
     trade.Exchange_Trade_Code = instrument.PrimSecPrimExch;
-    trade.Trader = trade.Entered_By = faker_1.faker.lorem.word();
+    trade.Trader = trade.Entered_By = order.Trader;
     trade.Trade_Flags = "";
     trade.Sub_Account = faker_1.faker.finance.accountName();
     trade.Notes = faker_1.faker.lorem.words({ min: 1, max: 3 });
@@ -357,6 +418,7 @@ function generateTrade(order, params) {
     trade.Commission_Value = order.Commission_Value;
     trade.Trading_Entity_Id = order.Executing_Entity;
     trade.Amended_Datetime = trade.Trade_Datetime;
+    trade.Entered_Datetime = trade.Trade_Datetime;
     trade.Execution_Venue = instrument.PrimSecPrimExch;
     trade.Root_Order_Id = order.Root_Order_Id;
     return trade;

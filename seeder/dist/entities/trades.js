@@ -119,6 +119,14 @@ __decorate([
         nullable: true,
     }),
     __metadata("design:type", String)
+], Trades.prototype, "Counterparty_Code", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: "varchar",
+        length: 50,
+        nullable: true,
+    }),
+    __metadata("design:type", String)
 ], Trades.prototype, "Counterparty", void 0);
 __decorate([
     (0, typeorm_1.Column)({
@@ -226,26 +234,10 @@ __decorate([
 ], Trades.prototype, "Instrument_Id", void 0);
 __decorate([
     (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
-        nullable: true,
-    }),
-    __metadata("design:type", String)
-], Trades.prototype, "Counterparty_Id", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
-        nullable: true,
-    }),
-    __metadata("design:type", String)
-], Trades.prototype, "Account_Id", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
         type: "datetime",
         nullable: true,
     }),
-    __metadata("design:type", String)
+    __metadata("design:type", Date)
 ], Trades.prototype, "Entered_Datetime", void 0);
 __decorate([
     (0, typeorm_1.Column)({
