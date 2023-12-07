@@ -4,27 +4,27 @@ exports.clients = void 0;
 exports.clients = [
     {
         code: "FIS",
-        description: "Fisher Fxxds",
+        description: "Finick Funds",
     },
     {
         code: "RSI",
-        description: "RS investxxt",
+        description: "RAS Investment",
     },
     {
         code: "HOBHK",
-        description: "HOBA Glxxxl",
+        description: "HOPB Global",
     },
     {
         code: "SSZHK",
-        description: "Sinoxxc Securities",
+        description: "Sino Securities",
     },
     {
         code: "LM3SG",
-        description: "LMR Partxxxs Limited",
+        description: "LM Partners Limited",
     },
     {
         code: "PAFSG",
-        description: "PAXXFIC ALLIANCE",
+        description: "Atlantic Alliance",
     },
     {
         code: "NZXHK",
@@ -32,10 +32,10 @@ exports.clients = [
     },
     {
         code: "AQL",
-        description: "Aquilo xxpital",
+        description: "Aqua Capital",
     },
     {
         code: "LMOUK",
-        description: "Lxxbard Odier",
+        description: "Liam Odier",
     },
 ];

@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Orders = void 0;
 const typeorm_1 = require("typeorm");
+const enum_1 = require("../types/enum");
 let Orders = class Orders {
     constructor() {
         this.Version = 1;
@@ -19,8 +20,8 @@ let Orders = class Orders {
 exports.Orders = Orders;
 __decorate([
     (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
+        type: "enum",
+        enum: enum_1.EOrderState,
         nullable: true,
     }),
     __metadata("design:type", String)
@@ -99,8 +100,8 @@ __decorate([
 ], Orders.prototype, "Counterparty_Description", void 0);
 __decorate([
     (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
+        type: "enum",
+        enum: enum_1.ETopLevel,
         nullable: true,
     }),
     __metadata("design:type", String)
@@ -124,8 +125,8 @@ __decorate([
 ], Orders.prototype, "Version", void 0);
 __decorate([
     (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
+        type: "enum",
+        enum: enum_1.EBuySell,
         nullable: true,
     }),
     __metadata("design:type", String)
@@ -139,15 +140,6 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], Orders.prototype, "Total_Quantity", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
-        type: "decimal",
-        nullable: true,
-        scale: 14,
-        precision: 28,
-    }),
-    __metadata("design:type", String)
-], Orders.prototype, "Quantity_Field", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: "decimal",
@@ -173,24 +165,7 @@ __decorate([
         nullable: true,
     }),
     __metadata("design:type", String)
-], Orders.prototype, "Dealt_Ccy", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
-        nullable: true,
-    }),
-    __metadata("design:type", String)
 ], Orders.prototype, "Settlement_Ccy", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
-        type: "decimal",
-        nullable: true,
-        scale: 14,
-        precision: 28,
-    }),
-    __metadata("design:type", String)
-], Orders.prototype, "Dealt_To_Settlement_Rate", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: "datetime",
@@ -252,14 +227,6 @@ __decorate([
         nullable: true,
     }),
     __metadata("design:type", String)
-], Orders.prototype, "Buy_Sell_Qualifier", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
-        nullable: true,
-    }),
-    __metadata("design:type", String)
 ], Orders.prototype, "Root_Order_Id", void 0);
 __decorate([
     (0, typeorm_1.Column)({
@@ -279,14 +246,6 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], Orders.prototype, "Quantity_Filled_Today", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 100,
-        nullable: true,
-    }),
-    __metadata("design:type", String)
-], Orders.prototype, "Order_Flags", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: "datetime",

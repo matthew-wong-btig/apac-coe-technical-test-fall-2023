@@ -10,19 +10,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Trades = void 0;
-const faker_1 = require("@faker-js/faker");
 const typeorm_1 = require("typeorm");
+const enum_1 = require("../types/enum");
 let Trades = class Trades {
     constructor() {
-        this.Record_Type = "M";
-        this.State = faker_1.faker.helpers.arrayElement(["I", "C"]);
-        this.Buy_Sell = faker_1.faker.helpers.arrayElement(["B", "S"]);
-        this.Quantity = faker_1.faker.finance.amount({
-            autoFormat: false,
-            dec: 10,
-            max: 10000,
-            min: 10,
-        });
         this.Version_Number = 1;
         this.Order_Price_Type = "EQ";
         this.Root_Order_Id = null;
@@ -31,24 +22,24 @@ let Trades = class Trades {
 exports.Trades = Trades;
 __decorate([
     (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
+        type: "enum",
+        enum: enum_1.ERecordType,
         nullable: false,
     }),
     __metadata("design:type", String)
 ], Trades.prototype, "Record_Type", void 0);
 __decorate([
     (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
+        type: "enum",
+        enum: enum_1.EState,
         nullable: true,
     }),
     __metadata("design:type", String)
 ], Trades.prototype, "State", void 0);
 __decorate([
     (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
+        type: "enum",
+        enum: enum_1.EBuySell,
         nullable: true,
     }),
     __metadata("design:type", String)
@@ -200,14 +191,6 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], Trades.prototype, "Trader", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
-        type: "varchar",
-        length: 50,
-        nullable: true,
-    }),
-    __metadata("design:type", String)
-], Trades.prototype, "Trade_Flags", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: "varchar",

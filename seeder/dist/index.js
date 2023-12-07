@@ -12,10 +12,11 @@ const SecurityMaster_1 = require("./entities/SecurityMaster");
 const Client_1 = require("./entities/Client");
 const lodash_1 = require("lodash");
 const dayjs_1 = __importDefault(require("dayjs"));
-const randomizer_1 = require("./libs/helper/randomizer");
 const splitNumber_1 = require("./libs/helper/splitNumber");
 const Trader_1 = require("./entities/Trader");
+const enum_1 = require("./types/enum");
 (async function () {
+    faker_1.faker.seed(123);
     await ormconfig_1.AppDataSoruce.initialize();
     const or = ormconfig_1.AppDataSoruce.getRepository(order_1.Orders);
     const tr = ormconfig_1.AppDataSoruce.getRepository(trades_1.Trades);
@@ -36,7 +37,7 @@ function seed1() {
     const trader = faker_1.faker.helpers.arrayElement(Trader_1.traders);
     let rootOrder = generateRootOrder(security, client, trader);
     orders.push(rootOrder);
-    const action = (0, randomizer_1.finiteStateRandomizer)(["a", "b", "c", "d"]);
+    const action = faker_1.faker.helpers.arrayElement(["a", "b", "c", "d"]);
     if (action === "a") {
         const amendedOrder = amendOrder(rootOrder);
         rootOrder = (0, lodash_1.cloneDeep)(amendedOrder);
@@ -59,7 +60,7 @@ function seed1() {
     if (childOrders.length > 0) {
         const tempChildOrder = [];
         for (let childOrder of childOrders) {
-            const action = (0, randomizer_1.finiteStateRandomizer)(["a", "c", "d"]);
+            const action = faker_1.faker.helpers.arrayElement(["a", "c", "d"]);
             if (action === "a") {
                 const amendedOrder = amendOrder(childOrder);
                 childOrder = amendedOrder;
@@ -88,11 +89,11 @@ function seed1() {
 function generateRootOrder(security, client, trader) {
     const orderToInsert = new order_1.Orders();
     const enterDate = faker_1.faker.date.between({
-        from: (0, dayjs_1.default)().add(-1, "year").toDate(),
-        to: (0, dayjs_1.default)().add(-1, "day").toDate(),
+        from: (0, dayjs_1.default)().startOf("year").toDate(),
+        to: (0, dayjs_1.default)().endOf("year").toDate(),
     });
     const orderId = node_crypto_1.default.randomUUID();
-    orderToInsert.Order_State = "I";
+    orderToInsert.Order_State = enum_1.EOrderState.I;
     orderToInsert.Executing_Entity = "BTXX";
     orderToInsert.Contracting_Entity = "BTXX";
     orderToInsert.Instrument_Code = security.ticker_symbol;
@@ -102,9 +103,9 @@ function generateRootOrder(security, client, trader) {
     orderToInsert.Market_Id = security.PrimSecCompExch;
     orderToInsert.Counterparty_Code = client.code;
     orderToInsert.Counterparty_Description = client.description;
-    orderToInsert.Top_Level = "Y";
+    orderToInsert.Top_Level = enum_1.ETopLevel.Y;
     orderToInsert.Order_Id = orderId;
-    orderToInsert.Buy_Sell = faker_1.faker.helpers.arrayElement(["B", "S"]);
+    orderToInsert.Buy_Sell = faker_1.faker.helpers.enumValue(enum_1.EBuySell);
     orderToInsert.Total_Quantity = faker_1.faker.finance.amount({
         autoFormat: false,
         dec: 0,
@@ -123,8 +124,7 @@ function generateRootOrder(security, client, trader) {
         max: 10000,
         min: 10,
     });
-    orderToInsert.Settlement_Ccy = faker_1.faker.finance.currencyCode();
-    orderToInsert.Dealt_To_Settlement_Rate = "1";
+    orderToInsert.Settlement_Ccy = security.ParvalueCurenCD;
     orderToInsert.Amended_Datetime = enterDate;
     orderToInsert.Trader = trader;
     orderToInsert.Num_Fills = "0";
@@ -140,14 +140,9 @@ function generateRootOrder(security, client, trader) {
         max: 20,
         min: 0,
     });
-    orderToInsert.Buy_Sell_Qualifier =
-        orderToInsert.Buy_Sell === "S"
-            ? faker_1.faker.helpers.arrayElement(["S", ""])
-            : "c";
     orderToInsert.Root_Order_Id = orderId;
     orderToInsert.Quantity_Available = orderToInsert.Total_Quantity;
     orderToInsert.Quantity_Filled_Today = "0";
-    orderToInsert.Order_Flags = "";
     orderToInsert.Last_Complete_Datetime = enterDate;
     orderToInsert.Account_Code = faker_1.faker.finance.accountNumber();
     orderToInsert.Order_Notes = faker_1.faker.lorem.words({ min: 1, max: 3 });
@@ -156,12 +151,12 @@ function generateRootOrder(security, client, trader) {
 function generateChildOrder(rootOrder) {
     const clonedOrder = (0, lodash_1.cloneDeep)(rootOrder);
     const childOrderArray = [];
-    const numSplit = (0, randomizer_1.finiteStateRandomizer)([2, 3]);
+    const numSplit = faker_1.faker.helpers.arrayElement([2, 3]);
     if (numSplit > 0) {
         const qtyArr = (0, splitNumber_1.splitNumber)(Number(clonedOrder.Quantity_Available));
         for (let i = 0; i < numSplit; i++) {
             const child = (0, lodash_1.cloneDeep)(clonedOrder);
-            child.Top_Level = "N";
+            child.Top_Level = enum_1.ETopLevel.N;
             child.Order_Id = node_crypto_1.default.randomUUID();
             child.Total_Quantity = qtyArr[i].toString();
             child.Quantity_Available = qtyArr[i].toString();
@@ -173,7 +168,7 @@ function generateChildOrder(rootOrder) {
 function cancelOrder(rootOrder) {
     const original = rootOrder;
     const amended = (0, lodash_1.cloneDeep)(original);
-    amended.Order_State = "C";
+    amended.Order_State = enum_1.EOrderState.C;
     amended.Version += 1;
     amended.Amended_Datetime = faker_1.faker.date.between({
         from: original.Entered_Datetime,
@@ -194,7 +189,7 @@ function amendOrder(order) {
 function fillOrder(order, rootOrder) {
     console.log("trigger fill order");
     const checkCase = ["1trade", "2trade", "1cancel1trade", "notrade"];
-    const action = (0, randomizer_1.finiteStateRandomizer)(checkCase);
+    const action = faker_1.faker.helpers.arrayElement(checkCase);
     console.log(action);
     const trades = [];
     const orders = [];
@@ -250,7 +245,7 @@ function fillOrder(order, rootOrder) {
                 });
                 trades.push(tradeac);
                 let tradec = (0, lodash_1.cloneDeep)(tradeac);
-                tradec.State = "C";
+                tradec.State = enum_1.EState.C;
                 tradec.Version_Number += 1;
                 tradec.Amended_Datetime = faker_1.faker.date.between({
                     from: tradeac.Entered_Datetime,
@@ -334,7 +329,7 @@ function fillOrder(order, rootOrder) {
                 });
                 trades.push((0, lodash_1.cloneDeep)(tradeac));
                 let tradec = (0, lodash_1.cloneDeep)(tradeac);
-                tradec.State = "C";
+                tradec.State = enum_1.EState.C;
                 tradec.Version_Number += 1;
                 tradec.Amended_Datetime = faker_1.faker.date.between({
                     from: tradeac.Entered_Datetime,
@@ -383,8 +378,8 @@ function generateTrade(order, params) {
     const trade = new trades_1.Trades();
     const { quantity } = params;
     const instrument = SecurityMaster_1.SecurityMaster.find((e) => e.sedol === order.Sedol_Code);
-    trade.Record_Type = "M";
-    trade.State = "I";
+    trade.Record_Type = enum_1.ERecordType.M;
+    trade.State = enum_1.EState.I;
     trade.Buy_Sell = order.Buy_Sell;
     trade.Quantity = quantity.toString();
     trade.Instrument_Code = order.Instrument_Code;
@@ -396,10 +391,10 @@ function generateTrade(order, params) {
     trade.Gross_Consideration = (Number(order.Limit_Price) * quantity).toString();
     trade.Counterparty_Code = order.Counterparty_Code;
     trade.Counterparty = order.Counterparty_Description;
-    trade.Trade_Datetime = faker_1.faker.date.between(faker_1.faker.date.between({
+    trade.Trade_Datetime = faker_1.faker.date.between({
         from: order.Entered_Datetime,
         to: (0, dayjs_1.default)(order.Entered_Datetime).add(8, "h").toDate(),
-    }));
+    });
     trade.Trade_Id = node_crypto_1.default.randomUUID();
     trade.Version_Number = 1;
     trade.Settlement_Datetime = (0, dayjs_1.default)(trade.Trade_Datetime)
@@ -410,7 +405,6 @@ function generateTrade(order, params) {
     trade.Entered_By = faker_1.faker.lorem.word();
     trade.Exchange_Trade_Code = instrument.PrimSecPrimExch;
     trade.Trader = trade.Entered_By = order.Trader;
-    trade.Trade_Flags = "";
     trade.Sub_Account = faker_1.faker.finance.accountName();
     trade.Notes = faker_1.faker.lorem.words({ min: 1, max: 3 });
     trade.Instrument_Id = instrument.BbgCompTicker;
